@@ -1,0 +1,53 @@
+# .github/workflows/audit.yml
+name: Audit Dependencies
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['package-lock.json']
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    name: No new vulnerabilities introduced
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Install dependencies (main)
+        run: npm ci
+
+      - name: Audit main branch
+        run: |
+          npm audit --json > audit-main.json || true
+          echo "OLD_VULNS=$(jq '.metadata.vulnerabilities.total' audit-main.json)" >> $GITHUB_ENV
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+
+      - name: Install dependencies (PR)
+        run: npm ci
+
+      - name: Audit PR branch
+        run: |
+          npm audit --json > audit-pr.json || true
+          echo "NEW_VULNS=$(jq '.metadata.vulnerabilities.total' audit-pr.json)" >> $GITHUB_ENV
+
+      - name: Compare audit results
+        run: |
+          echo "Main branch vulnerabilities: $OLD_VULNS"
+          echo "PR branch vulnerabilities: $NEW_VULNS"
+          if [ "$NEW_VULNS" -gt "$OLD_VULNS" ]; then
+            echo "❌ New vulnerabilities introduced!"
+            exit 1
+          else
+            echo "✅ No new vulnerabilities introduced."
+          fi
