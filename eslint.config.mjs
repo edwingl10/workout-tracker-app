@@ -9,6 +9,18 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [...compat.extends('next/core-web-vitals', 'next/typescript', 'prettier')];
+const eslintConfig = [
+  ...compat.extends(
+    'next/core-web-vitals',
+    'next/typescript',
+    'prettier',
+    'plugin:jsx-a11y/recommended',
+  ),
+  {
+    rules: {
+      'react/jsx-props-no-spreading': 'off',
+    },
+  },
+];
 
 export default eslintConfig;
