@@ -31,6 +31,6 @@
     "typescript": "^5"
   },
   "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "**/*.{js,mjs,ts,jsx,tsx,json,css,scss,md,yml,yaml}": "prettier --write"
   }
 }
