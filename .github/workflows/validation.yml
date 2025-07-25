@@ -1,10 +1,10 @@
 # Workflow for validating pull requests
 
+# Workflow for validating pull requests
 name: Validation
 
 # Triggers the workflow on push or pull request for the main branch
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [main]
   pull_request:
@@ -15,17 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        id: modules-cache
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          node-version: '18'
+          cache: 'npm'
+
       - name: Install dependencies
-        if: steps.modules-cache.outputs.cache-hit != 'true'
         run: npm ci
+
       - name: Build app
         run: npm run build
 
@@ -34,17 +34,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        id: modules-cache
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+          node-version: '18'
+          cache: 'npm'
+
       - name: Install dependencies
-        if: steps.modules-cache.outputs.cache-hit != 'true'
         run: npm ci
+
       - name: Lint
         run: npm run lint
 
@@ -53,13 +53,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3
-      - name: Run Prettier Check
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Prettier formatting
         run: |
           npx prettier --check . || {
-            echo "Running auto-fix...";
-            npx prettier --write .;
-            git diff --exit-code
+            echo "❌ Code is not properly formatted!";
+            echo "Run 'npx prettier --write .' locally to fix formatting.";
+            exit 1;
           }
 
   # Ensure tests pass
