@@ -11,16 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     name: No new vulnerabilities introduced
     steps:
+      # STEP 1: Checkout main branch FIRST
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      # STEP 2: Setup Node.js AFTER checkout (so it can find package-lock.json)
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-
-      - name: Checkout main branch
-        uses: actions/checkout@v3
-        with:
-          ref: main
 
       - name: Install dependencies (main)
         run: npm ci
@@ -30,8 +32,16 @@ jobs:
           npm audit --json > audit-main.json || true
           echo "OLD_VULNS=$(jq '.metadata.vulnerabilities.total' audit-main.json)" >> $GITHUB_ENV
 
+      # STEP 3: Checkout PR branch
       - name: Checkout PR branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      # STEP 4: Setup Node.js again for PR branch
+      - name: Setup Node.js (PR branch)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
       - name: Install dependencies (PR)
         run: npm ci
