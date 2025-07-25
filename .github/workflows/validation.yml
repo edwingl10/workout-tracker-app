@@ -1,0 +1,98 @@
+# Workflow for validating pull requests
+
+# Workflow for validating pull requests
+name: Validation
+
+# Triggers the workflow on push or pull request for the main branch
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # Ensure builds succeed
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+
+  # Ensure lint checks pass
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+  # Ensure Prettier was used
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Prettier formatting
+        run: |
+          npx prettier --check . || {
+            echo "❌ Code is not properly formatted!";
+            echo "Run 'npx prettier --write .' locally to fix formatting.";
+            exit 1;
+          }
+
+  # Ensure tests pass
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout the repo
+  #       uses: actions/checkout@v3
+  #     - uses: actions/cache@v3
+  #       id: modules-cache
+  #       with:
+  #         path: node_modules
+  #         key: ${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-yarn-
+  #     - name: Install dependencies
+  #       if: steps.modules-cache.outputs.cache-hit != 'true'
+  #       run: yarn install --frozen-lockfile --prefer-offline
+  #     - name: Cache firebase emulators
+  #       uses: actions/cache@v2
+  #       with:
+  #         path: ~/.cache/firebase/emulators
+  #         key: ${{ runner.os }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
+  #       continue-on-error: true
+  #     - name: Run tests
+  #       run: yarn test
